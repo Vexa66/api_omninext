@@ -1,0 +1,48 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: alexvexa
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: template
+service: user-api
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: eu-north-1
+  environment:
+    DYNAMODB_TABLE: Users
+
+functions:
+  app:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          path: createUser
+          method: post
+      - http:
+          path: getUserById/{user_id}
+          method: get
+
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
+
+custom:
+  wsgi:
+    app: app.app
+    packRequirements: false
+
+resources:
+  Resources:
+    UsersDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: Users
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
